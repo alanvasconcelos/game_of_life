@@ -7,8 +7,12 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"strconv"
 	"time"
 )
+
+var envMatrixHeight string
+var envMatrixWidth string
 
 //Matrix defines the structure
 type Matrix struct {
@@ -18,6 +22,17 @@ type Matrix struct {
 
 func init() {
 	rand.Seed(time.Now().UTC().UnixNano())
+
+	envMatrixHeight = os.Getenv("MATRIX_HEIGHT")
+	envMatrixWidth = os.Getenv("MATRIX_WIDTH")
+
+	if envMatrixHeight == "" {
+		envMatrixHeight = "20"
+	}
+
+	if envMatrixWidth == "" {
+		envMatrixWidth = "80"
+	}
 }
 
 //IsAlive check if a given cell is alive
@@ -147,7 +162,16 @@ func InitLayer(height, width int) *Matrix {
 }
 
 func main() {
-	matrix := InitLayer(20, 80)
+	matrixHeight, errHeight := strconv.ParseInt(envMatrixHeight, 10, 32)
+	matrixWidth, errWidth := strconv.ParseInt(envMatrixWidth, 10, 32)
+
+	if errHeight != nil || errWidth != nil {
+		fmt.Println("Erro in environment variables")
+		fmt.Println("Try again without set MATRIX_HEIGHT and MATRIX_WIDTH")
+		os.Exit(1)
+	}
+
+	matrix := InitLayer(int(matrixHeight), int(matrixWidth))
 	signals := make(chan os.Signal, 1)
 
 	signal.Notify(signals, os.Interrupt)
